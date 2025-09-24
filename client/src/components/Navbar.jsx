@@ -3,7 +3,7 @@ import ButtonDefault from "./ButtonDefault";
 
 function Navbar() {
   return (
-    <nav className="w-full h-25 py-4 main-px fixed">
+    <nav className="w-full h-25 py-4 main-px fixed z-10">
       <div className="nav-containor w-full h-full text-[#121212] bg-[#f6f6f6] rounded-[50px] flex justify-between items-center px-10">
         <h1 className="font-bold">WINKLY</h1>
         <div className="navlinks flex items-center justify-center gap-2">
@@ -17,7 +17,7 @@ function Navbar() {
           <a className="font-sm h-10 min-w-10 px-4 rounded-[50px] flex items-center transition-colors hover:bg-[#121212] hover:text-white" href="">Explore</a>
         </div>
         <div className="btn-nav">
-            <ButtonDefault/>
+            <ButtonDefault targetLink={"/winkly"}>Open App</ButtonDefault>
         </div>
       </div>
     </nav>

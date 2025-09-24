@@ -1,13 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Krona+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
 @import "tailwindcss";
 
-*{
-  font-family: "Krona One", sans-serif;
-}
-.main-px{
+
+.main-px {
   padding-left: 180px;
   padding-right: 180px;
 }
-.bg-dark-th{
+
+.bg-dark-th {
   background-color: #161616;
+}
+
+.font-monst {
+  font-family: "Montserrat", sans-serif;
+}
+
+.font-lora {
+  font-family: "Lora", serif;
+
+}
+
+h1 {
+  font-family: "Lora", serif;
+
+}
+p{
+    font-family: "Montserrat", sans-serif;
+}
+button{
+  font-family: "Montserrat", sans-serif;
+}
+a{
+  font-family: "Montserrat", sans-serif;
 }
