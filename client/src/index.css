@@ -34,3 +34,16 @@ button{
 a{
   font-family: "Montserrat", sans-serif;
 }
+.card-about:hover{
+  transition: .5s all ease;
+  background-color: #f6f6f6;
+}
+.card-about:hover h3{
+  color: black;
+}
+.card-about:hover p{
+  color: black;
+}
+.card-about h3,p{
+  color: white;
+}
