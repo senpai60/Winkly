@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LoginScreen } from './components/LoginScreen';
+import { AuthScreen } from './components/AuthScreen';
 import { SwipeScreen } from './components/SwipeScreen';
 import { ProfileDetailsScreen } from './components/ProfileDetailsScreen';
 import { NFTDateScreen } from './components/NFTDateScreen';
@@ -8,7 +8,7 @@ import { DashboardScreen } from './components/DashboardScreen';
 import { MyProfileScreen } from './components/MyProfileScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 
-type Screen = 'login' | 'swipe' | 'profile' | 'nftDate' | 'rating' | 'dashboard' | 'myProfile' | 'settings';
+type Screen = 'auth' | 'swipe' | 'profile' | 'nftDate' | 'rating' | 'dashboard' | 'myProfile' | 'settings';
 
 interface Profile {
   id: string;
@@ -21,7 +21,7 @@ interface Profile {
 }
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('login');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('auth');
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
 
   const handleLogin = () => {
@@ -60,10 +60,6 @@ export default function App() {
     }
   };
 
-  const handleBackToDashboard = () => {
-    setCurrentScreen('dashboard');
-  };
-
   const handleMyProfile = () => {
     setCurrentScreen('myProfile');
   };
@@ -78,8 +74,8 @@ export default function App() {
 
   const renderScreen = () => {
     switch (currentScreen) {
-      case 'login':
-        return <LoginScreen onLogin={handleLogin} />;
+      case 'auth':
+        return <AuthScreen onLogin={handleLogin} />;
       
       case 'swipe':
         return (
@@ -132,7 +128,7 @@ export default function App() {
         return <SettingsScreen onBack={handleMyProfile} />;
       
       default:
-        return <LoginScreen onLogin={handleLogin} />;
+        return <AuthScreen onLogin={handleLogin} />;
     }
   };
 
@@ -142,3 +138,4 @@ export default function App() {
     </div>
   );
 }
+
