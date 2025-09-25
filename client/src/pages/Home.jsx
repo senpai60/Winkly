@@ -1,6 +1,7 @@
 import React from "react";
 import ButtonDefault from "../components/ButtonDefault";
 import About from "./About";
+import ServicesDisplay from "./ServicesDisplay";
 
 function Home() {
   return (
@@ -33,6 +34,9 @@ function Home() {
       
       {/* The fixed About component will now also work correctly! */}
       <About />
+
+      {/* Services Display */}
+      <ServicesDisplay/>
     </>
   );
 }

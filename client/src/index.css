@@ -2,7 +2,8 @@
 
 @import "tailwindcss";
 
-
+/* #8F3A84  */
+/* background-image: radial-gradient( circle farthest-corner at 50.3% 47.3%,  rgba(113,42,92,1) 0.1%, rgba(40,25,46,1) 90% ); */
 .main-px {
   padding-left: 180px;
   padding-right: 180px;
