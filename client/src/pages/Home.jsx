@@ -2,6 +2,7 @@ import React from "react";
 import ButtonDefault from "../components/ButtonDefault";
 import About from "./About";
 import ServicesDisplay from "./ServicesDisplay";
+import MyPage from "./MyPage";
 
 function Home() {
   return (
@@ -36,6 +37,7 @@ function Home() {
       <About />
 
       {/* Services Display */}
+      <MyPage/>
       <ServicesDisplay/>
     </>
   );

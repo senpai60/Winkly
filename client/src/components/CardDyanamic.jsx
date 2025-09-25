@@ -1,12 +1,30 @@
-import React from "react";
+import React, { useLayoutEffect, useRef } from "react";
+import gsap from "gsap";
 import { FaCheck } from "react-icons/fa";
 
 function CardDyanamic({ project }) {
+  const comp = useRef(null);
+  useLayoutEffect(() => {
+    let ctx = gsap.context(() => {
+      gsap.from("#image-card, #content", {
+        opacity: 0,
+        y: "+=30",
+        stagger: 0.3,
+        duration: 1,
+        ease: "power3.out",
+      });
+    },comp);
+    return () => ctx.revert()
+  },[project]);// Dependency array: re-run the animation when `project` changes
+
   if (!project) return null;
   return (
-    <div className="w-full min-h-120 flex gap-30 py-2 mb-40">
+    <div
+      ref={comp}
+      className="w-full min-h-120 flex gap-30 py-2 mb-40 text-white"
+    >
       {/* Image */}
-      <div className="image-card w-120 h-120 overflow-hidden">
+      <div id="image-card" className="image-card w-120 h-120 overflow-hidden">
         <img
           className="w-full h-full object-cover"
           src={project.image}
@@ -15,7 +33,7 @@ function CardDyanamic({ project }) {
       </div>
 
       {/* Content */}
-      <div className="content w-150">
+      <div id="content" className="content w-150">
         <h1 className="mb-4 text-5xl font-medium leading-13">
           {project.heading}
         </h1>

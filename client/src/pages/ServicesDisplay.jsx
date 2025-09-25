@@ -62,12 +62,9 @@ const projects = {
 function ServicesDisplay() {
   const [selected, setSelected] = useState("Smart Discovery");
   return (
-    <div className="page-2 px-40 bg-zinc-950">
+    <div className="page-2 px-40 bg-zinc-950 py-5">
       {/* Headings */}
-      <PageHeadings
-        para="Redefining Digital Dating with Innovation"
-        heading={"Our Core Services"}
-      />
+      
 
       {/* Button Dyanamic */}
       <div className="three-btn-section mb-20 w-full min-h-20 gap-20 flex justify-center items-center">
@@ -81,7 +78,7 @@ function ServicesDisplay() {
         ))}
       </div>
 
-      <CardDyanamic project={projects[selected]} />
+      <CardDyanamic className="py-30" project={projects[selected]} />
     </div>
   );
 }
