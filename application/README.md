@@ -1,7 +1,7 @@
 
-  # Untitled
+  # Mobile Dating App Design
 
-  This is a code bundle for Untitled. The original project is available at https://www.figma.com/design/fkUOSXn95AQZ3CU2hQIoYI/Untitled.
+  This is a code bundle for Mobile Dating App Design. The original project is available at https://www.figma.com/design/fkUOSXn95AQZ3CU2hQIoYI/Mobile-Dating-App-Design.
 
   ## Running the code
 
