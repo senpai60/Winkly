@@ -37,6 +37,7 @@ function Home() {
       <About />
 
       {/* Services Display */}
+      <ServicesDisplay/>
       
     </>
   );
