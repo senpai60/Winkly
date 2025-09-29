@@ -21,8 +21,8 @@ function Navbar() {
 
 
   return (
-    <nav className="w-full py-4 fixed top-0 left-0 z-50">
-      <div className="w-full px-4 md:px-10 lg:px-20">
+    <nav className="w-full py-4 fixed top-0 left-0 z-50 md:px-[60px]">
+      <div className="w-full px-4 lg:px-20">
         {/* The ref is attached to the container to detect outside clicks */}
         <div ref={navRef} className="nav-container relative w-full text-[#121212] bg-[#f6f6f6] rounded-[50px] flex justify-between items-center px-6 py-3 shadow-md">
           
