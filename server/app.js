@@ -1,5 +1,4 @@
 // app.js
-
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -7,7 +6,6 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -15,46 +13,60 @@ import allRoutes from './routes/index.js';
 
 const app = express();
 
-const viteURI ='https://winklyy.netlify.app/'
+// --- CORS Configuration ---
+const allowedOrigins = [
+  'https://winklyy.netlify.app', // your Netlify frontend
+  'http://localhost:3000'        // local dev
+];
 
-
-const corsOptions = {
-  origin: viteURI, // Allow your Vite frontend
-  optionsSuccessStatus: 200 
-};
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true); // allow non-browser requests like Postman
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('CORS policy: This origin is not allowed.'), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
 
 // --- Core Security & Parser Middleware ---
-app.use(helmet({ crossOriginResourcePolicy: false })); // Allow cross-origin images
-app.use(cors(corsOptions));
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-
-// --- ES Module workarounds for __dirname ---
+// --- ES Module __dirname workaround ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- Serve Static Files ---
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-
 // --- Database Connection ---
 const MONGO_URI = process.env.MONGO_URI;
 
-mongoose.connect(MONGO_URI)
-  .then(() => console.log('Successfully connected to MongoDB.'))
-  .catch(err => console.error('Database connection failed:', err));
+mongoose.connect(MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+  .then(() => console.log('✅ Successfully connected to MongoDB.'))
+  .catch(err => console.error('❌ Database connection failed:', err));
 
 // --- API Routes ---
 app.use('/api', allRoutes);
 
-// --- Server Health Check Route ---
+// --- Server Health Check ---
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'NFT Dating App API is up and running!' });
+  res.status(200).json({ message: 'NFT Dating App API is running!' });
+});
+
+// --- Global Error Handler (optional but good for CORS and others) ---
+app.use((err, req, res, next) => {
+  console.error('Global Error:', err.message);
+  res.status(500).json({ error: err.message });
 });
 
 // --- Start Server ---
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`Server is live on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server live on http://localhost:${PORT}`));
