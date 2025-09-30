@@ -14,6 +14,9 @@ export function LoginSignup({ onLogin }) {
     username: '',
     email: '',
     password: '',
+    dob: '', // Date of Birth state
+    gender: '', // Gender state
+    interestedIn: [], // Sexuality/Preference state
   });
   const [error, setError] = useState('');
 
@@ -25,6 +28,9 @@ export function LoginSignup({ onLogin }) {
       username: '',
       email: '',
       password: '',
+      dob: '',
+      gender: '',
+      interestedIn: [],
     })
   };
 
@@ -36,34 +42,54 @@ export function LoginSignup({ onLogin }) {
     }));
   };
 
+  const handleInterestChange = (e) => {
+    const { value, checked } = e.target;
+    setFormData(prev => {
+        const interests = prev.interestedIn;
+        if (checked) {
+            return { ...prev, interestedIn: [...interests, value] };
+        } else {
+            return { ...prev, interestedIn: interests.filter(interest => interest !== value) };
+        }
+    });
+  };
+
   const handleSubmit = async () => {
     setError('');
     const endpoint = isLogin ? '/login' : '/register';
     try {
-      const { email, password, fullname, username } = formData;
-      const payload = isLogin ? { email, password } : { fullname, username, email, password };
-
-      if (!email || !password || (!isLogin && (!fullname || !username))) {
-        setError('Please fill in all fields.');
-        return;
-      }
-      
-      const response = await axios.post(`${API_URL}${endpoint}`, payload);
-
-      if (response.data.token) {
-        console.log('Authentication successful:', response.data.message);
-        onLogin(response.data.token);
+      if (isLogin) {
+        // Login Logic
+        const { email, password } = formData;
+        if (!email || !password) return setError('Please fill in all fields.');
+        const response = await axios.post(`${API_URL}${endpoint}`, { email, password });
+        if (response.data.token) {
+          onLogin(response.data.token);
+        }
+      } else {
+        // Register Logic
+        if (!formData.fullname || !formData.username || !formData.email || !formData.password || !formData.dob || !formData.gender || formData.interestedIn.length === 0) {
+          return setError('Please fill in all fields.');
+        }
+        const response = await axios.post(`${API_URL}${endpoint}`, formData);
+        if (response.data.token) {
+          console.log('Registration successful:', response.data.message);
+          onLogin(response.data.token);
+        }
       }
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred. Please try again.');
     }
   };
 
+  const genderOptions = ["Male", "Female", "Non-binary", "Transgender", "Other", "Prefer not to say"];
+  const interestOptions = ["Male", "Female", "Non-binary", "Transgender", "Other"];
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-transparent to-pink-900/20 pointer-events-none" />
       <motion.div
-        className="flex-1 flex flex-col items-center justify-center space-y-8 z-10 w-full max-w-sm"
+        className="flex-1 flex flex-col items-center justify-center space-y-6 z-10 w-full max-w-sm"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
@@ -95,60 +121,49 @@ export function LoginSignup({ onLogin }) {
         >
           {!isLogin && (
             <>
-              <Input
-                name='fullname'
-                type="text"
-                placeholder="Full Name"
-                className="w-full glass-card border-white/10 focus:border-accent"
-                value={formData.fullname}
-                onChange={handleChange}
-              />
-              <Input
-                name='username'
-                type="text"
-                placeholder="Username"
-                className="w-full glass-card border-white/10 focus:border-accent"
-                value={formData.username}
-                onChange={handleChange}
-              />
+              <Input name='fullname' type="text" placeholder="Full Name" value={formData.fullname} onChange={handleChange} className="w-full glass-card border-white/10 focus:border-accent" />
+              <Input name='username' type="text" placeholder="Username" value={formData.username} onChange={handleChange} className="w-full glass-card border-white/10 focus:border-accent" />
             </>
           )}
-          <Input
-            name='email'
-            type="email"
-            placeholder="Email"
-            className="w-full glass-card border-white/10 focus:border-accent"
-            value={formData.email}
-            onChange={handleChange}
-          />
-          <Input
-            name='password'
-            type="password"
-            placeholder="Password"
-            className="w-full glass-card border-white/10 focus:border-accent"
-            value={formData.password}
-            onChange={handleChange}
-          />
+          <Input name='email' type="email" placeholder="Email" value={formData.email} onChange={handleChange} className="w-full glass-card border-white/10 focus:border-accent" />
+          <Input name='password' type="password" placeholder="Password" value={formData.password} onChange={handleChange} className="w-full glass-card border-white/10 focus:border-accent" />
+          
+          {!isLogin && (
+            <>
+              {/* --- Date of Birth Input --- */}
+              <div className='text-left'>
+                <label className="text-sm text-muted-foreground ml-1">Date of Birth</label>
+                <Input name='dob' type="date" value={formData.dob} onChange={handleChange} className="w-full glass-card border-white/10 focus:border-accent" />
+              </div>
+              
+              {/* --- Gender Selection --- */}
+              <select name="gender" value={formData.gender} onChange={handleChange} className="w-full h-11 px-3 py-1 text-sm bg-transparent glass-card border border-white/10 rounded-md focus:border-accent outline-none">
+                <option value="" disabled>Select your gender</option>
+                {genderOptions.map(option => <option key={option} value={option} className="bg-gray-800 text-white">{option}</option>)}
+              </select>
+
+              {/* --- Interested In --- */}
+              <div className='text-left text-muted-foreground'>
+                <label className="text-sm ml-1">Interested In</label>
+                <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                    {interestOptions.map(option => (
+                        <label key={option} className="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" value={option} onChange={handleInterestChange} className="form-checkbox h-4 w-4 text-primary bg-gray-700 border-gray-600 rounded focus:ring-primary"/>
+                            <span>{option}</span>
+                        </label>
+                    ))}
+                </div>
+              </div>
+            </>
+          )}
+          
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-          <Button
-            onClick={handleSubmit}
-            className="w-full glass-card glow-pink hover:glow-pink/80 transition-all duration-300 py-6"
-            size="lg"
-          >
+          <Button onClick={handleSubmit} className="w-full glass-card glow-pink hover:glow-pink/80 transition-all duration-300 py-6" size="lg">
             <Heart className="w-5 h-5 mr-2" />
             {isLogin ? 'Login with Email' : 'Sign Up with Email'}
           </Button>
         </motion.div>
-        <p className="text-muted-foreground">or</p>
-        <Button
-            onClick={() => alert("Wallet connection not implemented yet.")}
-            variant="outline"
-            className="w-full glass border-accent/30 hover:border-accent hover:bg-accent/10 hover:glow-blue transition-all duration-300 py-6"
-            size="lg"
-          >
-            <Wallet className="w-5 h-5 mr-2" />
-            Connect Wallet
-          </Button>
+        
         <p className="text-sm text-muted-foreground">
           {isLogin ? "Don't have an account? " : 'Already have an account? '}
           <button onClick={toggleForm} className="text-primary hover:underline">
@@ -156,14 +171,6 @@ export function LoginSignup({ onLogin }) {
           </button>
         </p>
       </motion.div>
-      <motion.p
-        className="text-xs text-muted-foreground text-center z-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 0.6 }}
-      >
-        By continuing, you agree to our Terms & Privacy Policy
-      </motion.p>
     </div>
   );
 }
