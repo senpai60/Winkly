@@ -1,32 +1,31 @@
 import multer from 'multer';
-import path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import 'dotenv/config'; // dotenv automatically load karega .env variables
 
-// Files ko disk par store karne ke liye storage engine set karo
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Files 'uploads/' folder mein save hongi
-  },
-  filename: function (req, file, cb) {
-    // Har file ke liye ek unique naam generate karo
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+// --- Cloudinary Config ---
+cloudinary.config({
+  cloud_name: 'dtvlnfakj',
+  api_key: '551389693122312',
+  api_secret: '2rTPcgfyRvFLsQA1GJJpxN9d2aE',
+  secure: true
+});
+
+
+// --- Multer Storage for Cloudinary ---
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'winkly',                  // Cloudinary folder
+    allowed_formats: ['jpg', 'jpeg', 'png'],
+    transformation: [{ width: 400, height: 600, crop: "limit" }] // vertical-friendly
   }
 });
 
-// Sirf image files ko allow karne ke liye file filter
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Not an image! Please upload only images.'), false);
-  }
-};
-
+// --- Multer Upload Setup ---
 const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 1024 * 1024 * 5 // 5 MB file size limit
-  },
-  fileFilter: fileFilter
+  storage,
+  limits: { fileSize: 1024 * 1024 * 2 } // 2 MB limit
 });
 
 export default upload;
