@@ -8,7 +8,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 
 // Axios instance to automatically add the auth token
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`,
 });
 
 api.interceptors.request.use((config) => {

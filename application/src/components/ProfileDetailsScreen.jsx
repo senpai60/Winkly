@@ -3,30 +3,40 @@ import { motion } from 'motion/react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { ArrowLeft, Heart, Diamond, Star, Calendar, Gamepad2, Gift } from 'lucide-react';
+import { ArrowLeft, Heart, Diamond, Star, Calendar } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 export function ProfileDetailsScreen({ profile, onBack, onBuyNFTDate }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
-  const images = [
-    profile.image,
-    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400',
-    'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400'
-  ];
+  // Use the images from the profile prop. If none, provide a placeholder.
+  const images = profile.images && profile.images.length > 0
+    ? profile.images.map(p => `${import.meta.env.VITE_API_BASE_URL}/${p.replace(/\\/g, '/')}`)
+    : [`https://via.placeholder.com/400x500.png?text=${profile.name}`];
 
-  const stats = {
-    successfulDates: 15,
-    rating: 4.8,
-    earnedRewards: 47
+  // Use the nftStats from the profile prop.
+  const stats = profile.nftStats || {
+    nftDates: 0,
+    rating: 0,
+    totalEarned: 0
   };
 
-  const interests = ['Coffee', 'Crypto', 'Art', 'Travel', 'Music', 'Fitness'];
+  // Use interests from the profile prop.
+  const interests = profile.interests || [];
+
+  // This can be fetched from a separate API endpoint in the future
   const nftActivity = [
     { type: 'earned', amount: 5, date: '2 days ago', description: 'Completed 7-day date with Mike' },
     { type: 'bought', amount: 3, date: '1 week ago', description: 'NFT Date purchase for Emma' },
-    { type: 'earned', amount: 8, date: '2 weeks ago', description: 'Completed 7-day date with Alex' }
   ];
+  
+  if (!profile) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+            <p className="text-white">Loading profile details...</p>
+        </div>
+      );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,12 +46,7 @@ export function ProfileDetailsScreen({ profile, onBack, onBuyNFTDate }) {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <Button
-          onClick={onBack}
-          variant="ghost"
-          size="sm"
-          className="hover:bg-white/10"
-        >
+        <Button onClick={onBack} variant="ghost" size="sm" className="hover:bg-white/10">
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <h1 className="font-semibold">{profile.name}'s Profile</h1>
@@ -61,24 +66,8 @@ export function ProfileDetailsScreen({ profile, onBack, onBuyNFTDate }) {
           className="w-full h-full object-cover"
         />
         
-        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         
-        {/* NFT Badge */}
-        {profile.hasNFTDate && (
-          <motion.div
-            className="absolute top-4 right-4"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <Badge className="bg-accent/20 text-accent border-accent/30 glow-blue">
-              💎 {profile.nftBadge}
-            </Badge>
-          </motion.div>
-        )}
-        
-        {/* Image dots */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
           {images.map((_, index) => (
             <button
@@ -91,7 +80,6 @@ export function ProfileDetailsScreen({ profile, onBack, onBuyNFTDate }) {
           ))}
         </div>
         
-        {/* Profile info overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
           <div className="flex items-end justify-between">
             <div>
@@ -101,10 +89,7 @@ export function ProfileDetailsScreen({ profile, onBack, onBuyNFTDate }) {
               <p className="text-white/80 text-lg">{profile.tagline}</p>
             </div>
             <div className="flex space-x-2">
-              <Button
-                size="lg"
-                className="w-12 h-12 rounded-full bg-primary hover:bg-primary/80 glow-pink"
-              >
+              <Button size="lg" className="w-12 h-12 rounded-full bg-primary hover:bg-primary/80 glow-pink">
                 <Heart className="w-5 h-5" />
               </Button>
             </div>
@@ -122,7 +107,7 @@ export function ProfileDetailsScreen({ profile, onBack, onBuyNFTDate }) {
         <div className="text-center">
           <div className="flex items-center justify-center space-x-1 mb-1">
             <Calendar className="w-4 h-4 text-accent" />
-            <span className="font-bold text-lg">{stats.successfulDates}</span>
+            <span className="font-bold text-lg">{stats.nftDates}</span>
           </div>
           <p className="text-xs text-muted-foreground">Dates</p>
         </div>
@@ -136,7 +121,7 @@ export function ProfileDetailsScreen({ profile, onBack, onBuyNFTDate }) {
         <div className="text-center">
           <div className="flex items-center justify-center space-x-1 mb-1">
             <Diamond className="w-4 h-4 text-accent" />
-            <span className="font-bold text-lg">{stats.earnedRewards}</span>
+            <span className="font-bold text-lg">{stats.totalEarned}</span>
           </div>
           <p className="text-xs text-muted-foreground">NFTs</p>
         </div>
@@ -159,18 +144,12 @@ export function ProfileDetailsScreen({ profile, onBack, onBuyNFTDate }) {
           <TabsContent value="about" className="mt-4 space-y-4">
             <div className="glass-card p-4 rounded-2xl">
               <h3 className="font-semibold mb-2">About {profile.name}</h3>
-              <p className="text-muted-foreground">
-                Passionate about meaningful connections and exploring the intersection of technology and human relationships. 
-                I believe in authentic conversations and genuine chemistry.
-              </p>
+              <p className="text-muted-foreground">{profile.about || 'Nothing to see here yet!'}</p>
             </div>
             
             <div className="glass-card p-4 rounded-2xl">
               <h3 className="font-semibold mb-2">Looking for</h3>
-              <p className="text-muted-foreground">
-                Someone who values authenticity, enjoys deep conversations, and is open to new experiences. 
-                Bonus points if you're into crypto or art!
-              </p>
+              <p className="text-muted-foreground">{profile.lookingFor || 'Someone amazing!'}</p>
             </div>
           </TabsContent>
           
@@ -178,15 +157,11 @@ export function ProfileDetailsScreen({ profile, onBack, onBuyNFTDate }) {
             <div className="glass-card p-4 rounded-2xl">
               <h3 className="font-semibold mb-4">Interests</h3>
               <div className="flex flex-wrap gap-2">
-                {interests.map((interest, index) => (
-                  <Badge 
-                    key={index} 
-                    variant="secondary" 
-                    className="bg-white/5 hover:bg-white/10 transition-colors"
-                  >
+                {interests.length > 0 ? interests.map((interest, index) => (
+                  <Badge key={index} variant="secondary" className="bg-white/5 hover:bg-white/10 transition-colors">
                     {interest}
                   </Badge>
-                ))}
+                )) : <p className="text-sm text-muted-foreground">No interests listed yet.</p>}
               </div>
             </div>
           </TabsContent>
@@ -196,9 +171,7 @@ export function ProfileDetailsScreen({ profile, onBack, onBuyNFTDate }) {
               <div key={index} className="glass-card p-4 rounded-2xl">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
-                    <Diamond className={`w-4 h-4 ${
-                      activity.type === 'earned' ? 'text-green-400' : 'text-accent'
-                    }`} />
+                    <Diamond className={`w-4 h-4 ${activity.type === 'earned' ? 'text-green-400' : 'text-accent'}`} />
                     <span className="font-semibold">
                       {activity.type === 'earned' ? 'Earned' : 'Bought'} {activity.amount} NFT
                     </span>
@@ -227,9 +200,6 @@ export function ProfileDetailsScreen({ profile, onBack, onBuyNFTDate }) {
           <Diamond className="w-5 h-5 mr-2" />
           Buy 7-Day NFT Date (3 NFTs)
         </Button>
-        <p className="text-center text-xs text-muted-foreground mt-2">
-          Refundable if both parties rate 4+ stars
-        </p>
       </motion.div>
     </div>
   );

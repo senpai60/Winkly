@@ -5,7 +5,7 @@ import { Input } from './ui/input';
 import { Heart, Wallet } from 'lucide-react';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/users';
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/users`;
 
 export function LoginSignup({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
