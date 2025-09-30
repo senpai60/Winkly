@@ -3,6 +3,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 
 import User from "../models/User.js";
+import Settings from "../models/Settings.js";
 
 const router = express.Router();
 
@@ -23,6 +24,7 @@ router.post("/register", async (req, res) => {
     // <-- Just pass password; schema will hash it
     const newUser = await User.create({ fullname, username, email, password });
 
+    await Settings.create({ user: newUser._id });
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
@@ -81,16 +83,5 @@ router.post("/login", async (req, res) => {
 // @route   GET /api/users/me
 // @desc    Get current user's data
 // @access  Private
-router.get("/me", auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    res.status(200).json(user);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Server error" });
-  }
-});
 
 export default router;
