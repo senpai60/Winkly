@@ -3,12 +3,62 @@ import { motion } from 'motion/react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Heart, Wallet } from 'lucide-react';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5000/api/users';
 
 export function LoginSignup({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({
+    fullname: '',
+    username: '',
+    email: '',
+    password: '',
+  });
+  const [error, setError] = useState('');
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
+    setError('');
+    setFormData({
+      fullname: '',
+      username: '',
+      email: '',
+      password: '',
+    })
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async () => {
+    setError('');
+    const endpoint = isLogin ? '/login' : '/register';
+    try {
+      const { email, password, fullname, username } = formData;
+      const payload = isLogin ? { email, password } : { fullname, username, email, password };
+
+      if (!email || !password || (!isLogin && (!fullname || !username))) {
+        setError('Please fill in all fields.');
+        return;
+      }
+      
+      const response = await axios.post(`${API_URL}${endpoint}`, payload);
+
+      if (response.data.token) {
+        console.log('Authentication successful:', response.data.message);
+        // *** THE FIX IS HERE ***
+        // Pass the token received from the server to the onLogin function
+        onLogin(response.data.token);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'An error occurred. Please try again.');
+    }
   };
 
   return (
@@ -31,7 +81,7 @@ export function LoginSignup({ onLogin }) {
             transition={{ delay: 0.2, duration: 0.6 }}
           >
             <Heart className="w-8 h-8 text-primary" />
-            <h1 className="gradient-text-pink-blue text-4xl font-bold">NFTLove</h1>
+            <h1 className="gradient-text-pink-blue text-4xl font-bold">Winkly</h1>
           </motion.div>
 
           <motion.p
@@ -58,12 +108,16 @@ export function LoginSignup({ onLogin }) {
                 type="text"
                 placeholder="Full Name"
                 className="w-full glass-card border-white/10 focus:border-accent"
+                value={formData.fullname}
+                onChange={handleChange}
               />
               <Input
                 name='username'
                 type="text"
                 placeholder="Username"
                 className="w-full glass-card border-white/10 focus:border-accent"
+                value={formData.username}
+                onChange={handleChange}
               />
             </>
           )}
@@ -72,16 +126,22 @@ export function LoginSignup({ onLogin }) {
             type="email"
             placeholder="Email"
             className="w-full glass-card border-white/10 focus:border-accent"
+            value={formData.email}
+            onChange={handleChange}
           />
           <Input
             name='password'
             type="password"
             placeholder="Password"
             className="w-full glass-card border-white/10 focus:border-accent"
+            value={formData.password}
+            onChange={handleChange}
           />
 
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
           <Button
-            onClick={onLogin}
+            onClick={handleSubmit}
             className="w-full glass-card glow-pink hover:glow-pink/80 transition-all duration-300 py-6"
             size="lg"
           >
@@ -93,7 +153,7 @@ export function LoginSignup({ onLogin }) {
         <p className="text-muted-foreground">or</p>
 
         <Button
-            onClick={onLogin}
+            onClick={() => alert("Wallet connection not implemented yet.")}
             variant="outline"
             className="w-full glass border-accent/30 hover:border-accent hover:bg-accent/10 hover:glow-blue transition-all duration-300 py-6"
             size="lg"

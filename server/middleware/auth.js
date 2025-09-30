@@ -10,10 +10,11 @@ const auth = async (req, res, next) => {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ message: "No token, authorization denied" });
     }
+    console.log("🔍 Auth Header Received:", authHeader); 
 
     // Extract token
-    const token = authHeader.replace("Bearer ", "");
-
+    const token = authHeader ? authHeader.replace("Bearer ", "") : null;
+    console.log("🔍 Token Extracted:", token);
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 

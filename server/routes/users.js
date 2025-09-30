@@ -1,9 +1,9 @@
 // routes/users.js
 import express from "express";
 import jwt from "jsonwebtoken";
-
 import User from "../models/User.js";
 import Settings from "../models/Settings.js";
+import Profile from "../models/Profile.js";
 
 const router = express.Router();
 
@@ -21,18 +21,19 @@ router.post("/register", async (req, res) => {
     if (existingUser)
       return res.status(400).json({ message: "Email already in use" });
 
-    // <-- Just pass password; schema will hash it
     const newUser = await User.create({ fullname, username, email, password });
 
+    await Profile.create({ user: newUser._id, name: fullname, images: [] });
     await Settings.create({ user: newUser._id });
+
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
-
+    console.log("✅ Token created on register:", token);
     res.cookie("token", token, {
       maxAge: 3600000,
       httpOnly: true,
-      secure: false,
+      secure: false, // Set to true in production
     });
 
     res.status(201).json({ message: "Registration successful", token });
@@ -52,7 +53,6 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    // +password because select: false in schema
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
@@ -63,14 +63,16 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ userid: user._id }, process.env.JWT_SECRET, {
+    // *** THE FIX IS HERE ***
+    // Use 'id' to be consistent with the register route and auth middleware
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
     res.cookie("token", token, {
       maxAge: 3600000,
       httpOnly: true,
-      secure: false,
+      secure: false, // Set to true in production
     });
 
     res.status(200).json({ message: "Login successful", token });
@@ -79,9 +81,5 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
-// @route   GET /api/users/me
-// @desc    Get current user's data
-// @access  Private
 
 export default router;

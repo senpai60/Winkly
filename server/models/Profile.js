@@ -9,15 +9,15 @@ const profileSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    required: true
+    // required: false (by default)
   },
   age: {
     type: Number,
-    required: true
+    // required: false (by default)
   },
   images: [{
     type: String,
-    required: true
+    // required: false (by default)
   }],
   tagline: String,
   about: String,
