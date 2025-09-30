@@ -3,6 +3,7 @@ import express from "express";
 const router = express.Router();
 import auth from "../middleware/auth.js";
 import Profile from "../models/Profile.js";
+import upload from "../middleware/upload.js";
 
 // @route   GET api/profiles
 // @desc    Get all profiles (for swiping)
@@ -10,7 +11,7 @@ import Profile from "../models/Profile.js";
 router.get("/", auth, async (req, res) => {
   try {
     const profiles = await Profile.find({
-      user: { $ne: req.user.id } // exclude logged-in user's profile
+      user: { $ne: req.user.id }, // exclude logged-in user's profile
     }).populate("user", "username email");
 
     res.status(200).json(profiles);
@@ -19,7 +20,6 @@ router.get("/", auth, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 // @route   GET api/profiles/me
 // @desc    Get logged-in user's profile
@@ -66,33 +66,37 @@ router.get("/:id", auth, async (req, res) => {
 // @route   POST api/profiles
 // @desc    Create or update a user profile
 // @access  Private
-router.post("/", auth, async (req, res) => {
-  const { name, age, images, tagline, about, lookingFor, interests } = req.body;
+// upload.array('images', 5) ka matlab hai ki 'images' field se max 5 files upload ho sakti hain
+router.post("/", auth, upload.array("images", 5), async (req, res) => {
+  const { name, age, tagline, about, lookingFor, interests } = req.body;
 
   try {
-    // Check if profile exists
+    let profileFields = { name, age, tagline, about, lookingFor, interests };
+
+    // Agar files upload hui hain, to unke path ko add karo
+    if (req.files) {
+      // req.files ek array hoga, hum har file ka path nikalenge
+      const imagePaths = req.files.map((file) => file.path);
+      profileFields.images = imagePaths;
+    }
+
     let profile = await Profile.findOne({ user: req.user.id });
 
     if (profile) {
-      // Update existing profile
+      // Profile ko update karo
       profile = await Profile.findOneAndUpdate(
         { user: req.user.id },
-        { $set: { name, age, images, tagline, about, lookingFor, interests } },
+        { $set: profileFields },
         { new: true }
       );
       return res.status(200).json(profile);
     }
 
-    // Create new profile
+    // Naya profile create karne ka logic ab register route mein hai,
+    // lekin isko yahan bhi rakhna ek fallback ke liye accha hai.
     const newProfile = new Profile({
+      ...profileFields,
       user: req.user.id,
-      name,
-      age,
-      images,
-      tagline,
-      about,
-      lookingFor,
-      interests,
     });
 
     await newProfile.save();

@@ -10,3 +10,6 @@ node_modules/
 
 # Vite cache
 .vite
+
+#static upload file
+server/uploads

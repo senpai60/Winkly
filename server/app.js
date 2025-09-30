@@ -1,57 +1,48 @@
 // app.js
 
 import dotenv from 'dotenv';
-dotenv.config(); // loads .env at the very beginning
+dotenv.config();
 
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import passport from 'passport';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import allRoutes from './routes/index.js';
-// import passportConfig from './'; // Import passport configuration
 
-
-
-// Initialize Express App
 const app = express();
 
+const corsOptions = {
+  origin: 'http://localhost:3000', // Allow your Vite frontend
+  optionsSuccessStatus: 200 
+};
+
 // --- Core Security & Parser Middleware ---
-app.use(helmet()); // Sets various security-related HTTP headers
-app.use(cors());
+app.use(helmet({ crossOriginResourcePolicy: false })); // Allow cross-origin images
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// --- Passport Middleware Initialization ---
-// app.use(passport.initialize());
-// passportConfig(passport); // Pass the passport object to our config function
 
-// --- Rate Limiting ---
-// Apply a rate limiter to authentication routes to prevent brute-force attacks
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 login/register requests per window
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: 'Too many requests from this IP, please try again after 15 minutes.',
-});
+// --- ES Module workarounds for __dirname ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// We'll apply this specifically to auth routes within your main router (index.js)
-// or you can apply it here if you prefer: app.use('/api/auth', authLimiter);
+// --- Serve Static Files ---
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 // --- Database Connection ---
-const MONGO_URI = process.env.MONGO_URI; // Get URI from .env
+const MONGO_URI = process.env.MONGO_URI;
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Successfully connected to MongoDB.'))
   .catch(err => console.error('Database connection failed:', err));
 
 // --- API Routes ---
-// Tip: You can pass the limiter to your main router if it handles all routes
-app.use('/api', allRoutes); // Pass limiter to the router setup
+app.use('/api', allRoutes);
 
 // --- Server Health Check Route ---
 app.get('/', (req, res) => {
@@ -59,7 +50,7 @@ app.get('/', (req, res) => {
 });
 
 // --- Start Server ---
-const PORT = process.env.PORT; // Get PORT from .env
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server is live on http://localhost:${PORT}`);

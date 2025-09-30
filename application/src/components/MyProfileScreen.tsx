@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import axios from 'axios';
 import { Button } from './ui/button';
@@ -43,15 +43,13 @@ api.interceptors.request.use((config) => {
 export function MyProfileScreen({ profile, onBack, onSettings }: MyProfileScreenProps) {
   const [isEditing, setIsEditing] = useState(false);
   
-  // FIX 1: Provide a proper type for the state
+  // FIX 1: Provide a proper type for the state to resolve TypeScript errors
   const [profileData, setProfileData] = useState<ProfileData>({
-    name: '',
-    age: '',
-    tagline: '',
-    about: '',
-    lookingFor: '',
-    interests: []
+    name: '', age: '', tagline: '', about: '', lookingFor: '', interests: []
   });
+
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (profile) {
@@ -63,15 +61,31 @@ export function MyProfileScreen({ profile, onBack, onSettings }: MyProfileScreen
         lookingFor: profile.lookingFor || '',
         interests: profile.interests || []
       });
+      setSelectedFiles([]);
     }
   }, [profile]);
 
-  // FIX 2: Implement the handleSave function
   const handleSave = async () => {
+    const formData = new FormData();
+
+    // Append all text data
+    formData.append('name', profileData.name);
+    formData.append('age', String(profileData.age));
+    formData.append('tagline', profileData.tagline);
+    formData.append('about', profileData.about);
+    formData.append('lookingFor', profileData.lookingFor);
+    profileData.interests.forEach(interest => formData.append('interests', interest));
+
+    // Append new image files
+    selectedFiles.forEach(file => {
+      formData.append('images', file);
+    });
+    
     try {
-      // The POST request will update the profile if it exists
-      const response = await api.post('/profiles', profileData);
+      const response = await api.post('/profiles', formData);
+      
       console.log('Profile updated successfully:', response.data);
+      alert('Profile saved!');
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
@@ -90,19 +104,26 @@ export function MyProfileScreen({ profile, onBack, onSettings }: MyProfileScreen
     }
   };
 
+  const handleEditPhotosClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      setSelectedFiles(Array.from(event.target.files));
+    }
+  };
+
   const userStats = profile?.nftStats || {
-    profileViews: 0,
-    likes: 0,
-    nftDates: 0,
-    successRate: 0,
-    rating: 0,
-    totalEarned: 0
+    profileViews: 0, likes: 0, nftDates: 0, successRate: 0, rating: 0, totalEarned: 0
   };
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const profileImages = profile?.images?.length > 0 ? profile.images : [
-    'https://images.unsplash.com/photo-1639986162505-c9bcccfc9712?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb3J0cmFpdCUyMHBlcnNvbiUyMHByb2ZpbGUlMjBwaG90byUyMG1vZGVybnxlbnwxfHx8fDE3NTg3OTE1MDN8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
-  ];
+  const profileImages = selectedFiles.length > 0 
+    ? selectedFiles.map(file => URL.createObjectURL(file))
+    : (profile?.images?.length > 0 ? profile.images.map((p: string) => `http://localhost:5000/${p.replace(/\\\\/g, '/')}`) : [
+    'https://images.unsplash.com/photo-1639986162505-c9bcccfc9712?w=400',
+  ]);
   
   const availableInterests = ['Crypto', 'Art', 'Travel', 'Coffee', 'Gaming', 'Music', 'Fitness', 'Reading', 'Movies', 'Cooking'];
 
@@ -153,7 +174,20 @@ export function MyProfileScreen({ profile, onBack, onSettings }: MyProfileScreen
         
         {isEditing && (
           <motion.div className="absolute top-4 right-4" initial={{ scale: 0 }} animate={{ scale: 1 }}>
-            <Button size="sm" className="bg-black/50 hover:bg-black/70 backdrop-blur-sm">
+            {/* FIX 2: Hidden input is moved here to prevent layout shift */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              multiple
+              accept="image/*"
+              className="hidden"
+            />
+            <Button
+              size="sm"
+              className="bg-black/50 hover:bg-black/70 backdrop-blur-sm"
+              onClick={handleEditPhotosClick}
+            >
               <Camera className="w-4 h-4 mr-2" />
               Edit Photos
             </Button>
@@ -312,9 +346,9 @@ export function MyProfileScreen({ profile, onBack, onSettings }: MyProfileScreen
                 <div className="flex flex-wrap gap-2">
                   {isEditing ? (
                     <>
-                      {availableInterests.map((interest, index) => (
+                      {availableInterests.map((interest) => (
                         <Badge 
-                          key={index}
+                          key={interest}
                           variant={profileData.interests.includes(interest) ? "default" : "outline"}
                           className={`cursor-pointer transition-all ${
                             profileData.interests.includes(interest)
@@ -344,7 +378,46 @@ export function MyProfileScreen({ profile, onBack, onSettings }: MyProfileScreen
           </TabsContent>
           
           <TabsContent value="stats" className="mt-4 space-y-4">
-            {/* Stats content remains the same */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="glass-card">
+                <CardContent className="p-4 text-center">
+                  <div className="flex items-center justify-center space-x-2 mb-2">
+                    <Diamond className="w-5 h-5 text-accent" />
+                    <span className="text-2xl font-bold">{userStats.nftDates}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">NFT Dates</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="glass-card">
+                <CardContent className="p-4 text-center">
+                  <div className="text-2xl font-bold text-green-400 mb-2">
+                    {userStats.successRate}%
+                  </div>
+                  <p className="text-sm text-muted-foreground">Success Rate</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="glass-card">
+                <CardContent className="p-4 text-center">
+                  <div className="flex items-center justify-center space-x-2 mb-2">
+                    <Diamond className="w-5 h-5 text-accent" />
+                    <span className="text-2xl font-bold">{userStats.totalEarned}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">NFTs Earned</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="glass-card">
+                <CardContent className="p-4 text-center">
+                  <div className="flex items-center justify-center space-x-2 mb-2">
+                    <Calendar className="w-5 h-5 text-primary" />
+                    <span className="text-2xl font-bold">12</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Days Active</p>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </motion.div>
