@@ -1,4 +1,3 @@
-// models/Profile.js
 import mongoose from 'mongoose';
 
 const profileSchema = new mongoose.Schema({
@@ -9,15 +8,20 @@ const profileSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    // required: false (by default)
   },
-  age: {
-    type: Number,
-    // required: false (by default)
+  dob: {
+    type: Date,
+    required: true // DOB is now required
   },
+  gender: {
+    type: String,
+    required: true // Gender is now required
+  },
+  interestedIn: [{
+    type: String,
+  }],
   images: [{
     type: String,
-    // required: false (by default)
   }],
   tagline: String,
   about: String,
@@ -31,7 +35,26 @@ const profileSchema = new mongoose.Schema({
     rating: { type: Number, default: 0 },
     totalEarned: { type: Number, default: 0 }
   }
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// VIRTUAL for AGE
+profileSchema.virtual('age').get(function() {
+  if (!this.dob) {
+    return null;
+  }
+  const today = new Date();
+  const birthDate = new Date(this.dob);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+});
 
 const Profile = mongoose.model('Profile', profileSchema);
 export default Profile;
