@@ -4,6 +4,7 @@ const router = express.Router();
 import auth from "../middleware/auth.js";
 import Profile from "../models/Profile.js";
 import upload from "../middleware/upload.js";
+import fs from "fs";
 
 // @route   GET api/profiles
 // @desc    Get all profiles (for swiping)
@@ -71,36 +72,36 @@ router.post("/", auth, upload.array("images", 5), async (req, res) => {
   const { name, age, tagline, about, lookingFor, interests } = req.body;
 
   try {
-    let profileFields = { name, age, tagline, about, lookingFor, interests };
+    // --- 2. Find the existing profile to get old image paths ---
+    const oldProfile = await Profile.findOne({ user: req.user.id });
+    const oldImagePaths = oldProfile ? oldProfile.images : [];
 
-    // Agar files upload hui hain, to unke path ko add karo
-    if (req.files) {
-      // req.files ek array hoga, hum har file ka path nikalenge
-      const imagePaths = req.files.map((file) => file.path);
-      profileFields.images = imagePaths;
+    const profileFields = { name, age, tagline, about, lookingFor, interests };
+
+    // If new files were uploaded, add their paths
+    if (req.files && req.files.length > 0) {
+      profileFields.images = req.files.map((file) => file.path);
     }
 
-    let profile = await Profile.findOne({ user: req.user.id });
+    // Update the profile in the database
+    const updatedProfile = await Profile.findOneAndUpdate(
+      { user: req.user.id },
+      { $set: profileFields },
+      { new: true, upsert: true } // upsert:true will create if it doesn't exist
+    );
 
-    if (profile) {
-      // Profile ko update karo
-      profile = await Profile.findOneAndUpdate(
-        { user: req.user.id },
-        { $set: profileFields },
-        { new: true }
-      );
-      return res.status(200).json(profile);
+    // --- 3. Delete the old images from the filesystem ---
+    // Only do this if new images were successfully uploaded
+    if (req.files && req.files.length > 0) {
+      oldImagePaths.forEach((filePath) => {
+        fs.unlink(filePath, (err) => {
+          if (err)
+            console.error(`Failed to delete old image: ${filePath}`, err);
+        });
+      });
     }
 
-    // Naya profile create karne ka logic ab register route mein hai,
-    // lekin isko yahan bhi rakhna ek fallback ke liye accha hai.
-    const newProfile = new Profile({
-      ...profileFields,
-      user: req.user.id,
-    });
-
-    await newProfile.save();
-    res.status(201).json(newProfile);
+    return res.status(200).json(updatedProfile);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
