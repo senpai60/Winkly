@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LoginScreen } from './components/LoginScreen';
+import { LoginSignup } from './components/LoginSignup'; // Changed this line
 import { SwipeScreen } from './components/SwipeScreen';
 import { ProfileDetailsScreen } from './components/ProfileDetailsScreen';
 import { NFTDateScreen } from './components/NFTDateScreen';
@@ -67,60 +67,60 @@ export default function App() {
   const renderScreen = () => {
     switch (currentScreen) {
       case 'login':
-        return <LoginScreen onLogin={handleLogin} />;
-      
+        return <LoginSignup onLogin={handleLogin} />; // Changed this line
+
       case 'swipe':
         return (
-          <SwipeScreen 
+          <SwipeScreen
             onProfileDetails={handleProfileDetails}
             onNFTDate={handleBuyNFTDate}
             onMyProfile={handleMyProfile}
             onDashboard={handleDashboard}
           />
         );
-      
+
       case 'profile':
         return selectedProfile ? (
-          <ProfileDetailsScreen 
+          <ProfileDetailsScreen
             profile={selectedProfile}
             onBack={handleBackToSwipe}
             onBuyNFTDate={handleBuyNFTDate}
           />
         ) : null;
-      
+
       case 'nftDate':
         return selectedProfile ? (
-          <NFTDateScreen 
+          <NFTDateScreen
             profile={selectedProfile}
             onBack={handleBackToProfile}
             onComplete={handleCompleteDate}
           />
         ) : null;
-      
+
       case 'rating':
         return selectedProfile ? (
-          <RatingScreen 
+          <RatingScreen
             profile={selectedProfile}
             onComplete={handleRatingComplete}
           />
         ) : null;
-      
+
       case 'dashboard':
         return <DashboardScreen onBack={handleBackToSwipe} />;
-      
+
       case 'myProfile':
         return (
-          <MyProfileScreen 
+          <MyProfileScreen
             onBack={handleBackToSwipe}
             onSettings={handleSettings}
           />
         );
-      
+
       case 'settings':
         return <SettingsScreen onBack={handleMyProfile} />;
-      
+
       default:
-        return <LoginScreen onLogin={handleLogin} />;
+        return <LoginSignup onLogin={handleLogin} />; // Changed this line
     }
   };
 
