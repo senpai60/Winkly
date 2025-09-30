@@ -52,8 +52,6 @@ export function LoginSignup({ onLogin }) {
 
       if (response.data.token) {
         console.log('Authentication successful:', response.data.message);
-        // *** THE FIX IS HERE ***
-        // Pass the token received from the server to the onLogin function
         onLogin(response.data.token);
       }
     } catch (err) {
@@ -63,16 +61,13 @@ export function LoginSignup({ onLogin }) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-      {/* Background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-transparent to-pink-900/20 pointer-events-none" />
-
       <motion.div
         className="flex-1 flex flex-col items-center justify-center space-y-8 z-10 w-full max-w-sm"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
       >
-        {/* Logo & Tagline */}
         <div className="text-center space-y-4">
           <motion.div
             className="flex items-center justify-center space-x-2"
@@ -83,7 +78,6 @@ export function LoginSignup({ onLogin }) {
             <Heart className="w-8 h-8 text-primary" />
             <h1 className="gradient-text-pink-blue text-4xl font-bold">Winkly</h1>
           </motion.div>
-
           <motion.p
             className="text-muted-foreground text-lg"
             initial={{ opacity: 0 }}
@@ -93,8 +87,6 @@ export function LoginSignup({ onLogin }) {
             {isLogin ? 'Welcome back!' : 'Join the community.'}
           </motion.p>
         </div>
-
-        {/* Form Section */}
         <motion.div
           className="w-full space-y-4"
           initial={{ opacity: 0, y: 20 }}
@@ -137,9 +129,7 @@ export function LoginSignup({ onLogin }) {
             value={formData.password}
             onChange={handleChange}
           />
-
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-
           <Button
             onClick={handleSubmit}
             className="w-full glass-card glow-pink hover:glow-pink/80 transition-all duration-300 py-6"
@@ -149,9 +139,7 @@ export function LoginSignup({ onLogin }) {
             {isLogin ? 'Login with Email' : 'Sign Up with Email'}
           </Button>
         </motion.div>
-
         <p className="text-muted-foreground">or</p>
-
         <Button
             onClick={() => alert("Wallet connection not implemented yet.")}
             variant="outline"
@@ -161,7 +149,6 @@ export function LoginSignup({ onLogin }) {
             <Wallet className="w-5 h-5 mr-2" />
             Connect Wallet
           </Button>
-
         <p className="text-sm text-muted-foreground">
           {isLogin ? "Don't have an account? " : 'Already have an account? '}
           <button onClick={toggleForm} className="text-primary hover:underline">
@@ -169,8 +156,6 @@ export function LoginSignup({ onLogin }) {
           </button>
         </p>
       </motion.div>
-
-      {/* Footer */}
       <motion.p
         className="text-xs text-muted-foreground text-center z-10"
         initial={{ opacity: 0 }}

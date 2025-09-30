@@ -10,25 +10,19 @@ import {
   ArrowLeft, 
   Bell, 
   Shield, 
-  Heart, 
-  MapPin, 
   Filter, 
   Wallet, 
-  Moon, 
-  Volume2,
-  Vibrate,
-  Eye,
-  Lock,
-  AlertTriangle,
   HelpCircle,
+  AlertTriangle,
   LogOut
 } from 'lucide-react';
 
 interface SettingsScreenProps {
   onBack: () => void;
+  onLogout: () => void;
 }
 
-export function SettingsScreen({ onBack }: SettingsScreenProps) {
+export function SettingsScreen({ onBack, onLogout }: SettingsScreenProps) {
   const [settings, setSettings] = useState({
     notifications: {
       matches: true,
@@ -200,7 +194,6 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                   </div>
                 ))}
                 
-                {/* Special cases for sliders */}
                 {section.title === 'Discovery Settings' && (
                   <>
                     <Separator className="bg-white/10" />
@@ -312,6 +305,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               <Button 
                 variant="ghost" 
                 className="w-full justify-start hover:bg-red-500/10 text-red-400"
+                onClick={onLogout}
               >
                 <LogOut className="w-4 h-4 mr-3" />
                 Sign Out
@@ -327,7 +321,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
         >
-          <p>NFTLove v1.0.0</p>
+          <p>Winkly v1.0.0</p>
           <p className="mt-1">Made with ❤️ for Web3 dating</p>
         </motion.div>
       </div>

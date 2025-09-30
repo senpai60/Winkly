@@ -82,4 +82,20 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Add this route at the end of your server/routes/users.js file, before the export default router;
+
+// @route   POST /api/users/logout
+// @desc    Logs the user out
+// @access  Public (or Private, depending on how you want to handle it)
+router.post("/logout", (req, res) => {
+  try {
+    // Clear the cookie that was set during login
+    res.clearCookie("token");
+    res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error during logout" });
+  }
+});
+
 export default router;

@@ -14,7 +14,6 @@ const api = axios.create({
   baseURL: 'http://localhost:5000/api',
 });
 
-// Add a request interceptor to include the token in headers
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -25,30 +24,56 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState('login');
+  const [currentScreen, setCurrentScreen] = useState('loading'); 
   const [selectedProfile, setSelectedProfile] = useState(null);
-  const [myProfile, setMyProfile] = useState(null); // State to hold logged-in user's profile
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [myProfile, setMyProfile] = useState(null);
 
+  // Checks for an existing session when the app loads
+  useEffect(() => {
+    const verifyUser = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setCurrentScreen('login');
+        return;
+      }
 
-  const handleLogin = async (authToken) => {
-    console.log("🔑 Token received by App.jsx:", authToken);
-    localStorage.setItem('token', authToken);
-    setToken(authToken);
-    try {
-        // Fetch the logged-in user's profile
+      try {
         const response = await api.get('/profiles/me');
         setMyProfile(response.data);
         setCurrentScreen('swipe');
+      } catch (error) {
+        console.error("Session invalid or expired:", error);
+        localStorage.removeItem('token');
+        setCurrentScreen('login');
+      }
+    };
+
+    verifyUser();
+  }, []);
+
+  // Handles login and fetches the user's profile
+  const handleLogin = async (authToken) => {
+    localStorage.setItem('token', authToken);
+    try {
+      const response = await api.get('/profiles/me');
+      setMyProfile(response.data);
+      setCurrentScreen('swipe');
     } catch (error) {
-        console.error("Failed to fetch user profile:", error);
-        // Handle error, maybe show a message to the user
+      console.error("Failed to fetch user profile after login:", error);
+      setCurrentScreen('login');
     }
   };
 
+  // --- LOGOUT FUNCTIONALITY ---
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setMyProfile(null);
+    setCurrentScreen('login');
+    // Optional: could also make a call to a /api/logout endpoint
+  };
 
+  // --- Navigation Handlers ---
   const handleProfileDetails = (profile) => {
     setSelectedProfile(profile);
     setCurrentScreen('profile');
@@ -65,7 +90,6 @@ export default function App() {
   };
 
   const handleRatingComplete = (rating) => {
-    // In a real app, you'd save the rating and update the user's stats
     console.log('Rating completed:', rating);
     setCurrentScreen('dashboard');
   };
@@ -81,10 +105,6 @@ export default function App() {
     }
   };
 
-  const handleBackToDashboard = () => {
-    setCurrentScreen('dashboard');
-  };
-
   const handleMyProfile = () => {
     setCurrentScreen('myProfile');
   };
@@ -97,11 +117,15 @@ export default function App() {
     setCurrentScreen('dashboard');
   };
 
+  // Renders the correct screen based on the current state
   const renderScreen = () => {
+    if (currentScreen === 'loading') {
+      return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-white">Loading...</p></div>;
+    }
+
     switch (currentScreen) {
       case 'login':
         return <LoginSignup onLogin={handleLogin} />;
-
       case 'swipe':
         return (
           <SwipeScreen
@@ -111,7 +135,6 @@ export default function App() {
             onDashboard={handleDashboard}
           />
         );
-
       case 'profile':
         return selectedProfile ? (
           <ProfileDetailsScreen
@@ -120,7 +143,6 @@ export default function App() {
             onBuyNFTDate={handleBuyNFTDate}
           />
         ) : null;
-
       case 'nftDate':
         return selectedProfile ? (
           <NFTDateScreen
@@ -129,7 +151,6 @@ export default function App() {
             onComplete={handleCompleteDate}
           />
         ) : null;
-
       case 'rating':
         return selectedProfile ? (
           <RatingScreen
@@ -137,22 +158,18 @@ export default function App() {
             onComplete={handleRatingComplete}
           />
         ) : null;
-
       case 'dashboard':
         return <DashboardScreen onBack={handleBackToSwipe} />;
-
       case 'myProfile':
         return (
           <MyProfileScreen
-            profile={myProfile} // Pass the fetched profile data
+            profile={myProfile}
             onBack={handleBackToSwipe}
             onSettings={handleSettings}
           />
         );
-
       case 'settings':
-        return <SettingsScreen onBack={handleMyProfile} />;
-
+        return <SettingsScreen onBack={handleMyProfile} onLogout={handleLogout} />;
       default:
         return <LoginSignup onLogin={handleLogin} />;
     }
