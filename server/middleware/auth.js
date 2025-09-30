@@ -1,29 +1,35 @@
 // middleware/auth.js
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
-// IMPORTANT: This is a placeholder for actual authentication logic.
-// In a real application, you would use JSON Web Tokens (JWT) or sessions
-// to verify the user's identity.
-
-const auth = (req, res, next) => {
+const auth = async (req, res, next) => {
   try {
-    // For now, we'll just attach a mock user object to the request.
-    // Replace this with your actual token verification logic.
-    // For example, you would decode a JWT from the Authorization header.
-    
-    // const token = req.header('Authorization').replace('Bearer ', '');
-    // const decoded = jwt.verify(token, 'YOUR_JWT_SECRET');
-    // const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
-    // if (!user) { throw new Error(); }
-    
-    req.user = {
-      id: 'mockUserId12345', // This simulates a logged-in user
-      // You can add more user properties here if needed, like email or role
-    };
+    // Authorization header check
+    const authHeader = req.header("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "No token, authorization denied" });
+    }
 
-    console.log('Authentication middleware passed for a mock user.');
-    next(); // If the user is "authenticated", proceed to the next middleware or route handler
+    // Extract token
+    const token = authHeader.replace("Bearer ", "");
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Find user from DB
+    const user = await User.findById(decoded.id).select("-password");
+    if (!user) {
+      return res.status(401).json({ message: "Invalid token, user not found" });
+    }
+
+    // Attach user to request
+    req.user = user;
+
+    console.log("✅ Authentication successful for user:", user.email);
+    next();
   } catch (error) {
-    res.status(401).json({ message: 'Authentication failed. Please log in.' });
+    console.error("❌ Auth middleware error:", error.message);
+    res.status(401).json({ message: "Authentication failed" });
   }
 };
 
