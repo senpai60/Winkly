@@ -21,15 +21,14 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    if (!origin) return callback(null, true); // allow non-browser requests like Postman
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error('CORS policy: This origin is not allowed.'), false);
-    }
-    return callback(null, true);
+    if (!origin) return callback(null, true); // allow Postman or server requests
+    if (allowedOrigins.includes(origin)) return callback(null, true); // allowed
+    return callback(null, false); // <-- don't throw error, just disallow silently
   },
   credentials: true,
   optionsSuccessStatus: 200
 }));
+
 
 // --- Core Security & Parser Middleware ---
 app.use(helmet({ crossOriginResourcePolicy: false }));
