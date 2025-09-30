@@ -15,19 +15,22 @@ const app = express();
 
 // --- CORS Configuration ---
 const allowedOrigins = [
-  'https://winklyy.netlify.app', // your Netlify frontend
+  'https://winklyy.netlify.app', // Netlify frontend
   'http://localhost:3000'        // local dev
 ];
 
-app.use(cors({
+const corsOptions = {
   origin: function(origin, callback) {
-    if (!origin) return callback(null, true); // allow Postman or server requests
-    if (allowedOrigins.includes(origin)) return callback(null, true); // allowed
-    return callback(null, false); // <-- don't throw error, just disallow silently
+    console.log('Incoming request from origin:', origin); // debug
+    if (!origin) return callback(null, true); // allow Postman, curl, server-side
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('CORS policy: This origin is not allowed.'), false);
+    }
+    return callback(null, true);
   },
   credentials: true,
   optionsSuccessStatus: 200
-}));
+};
 
 
 // --- Core Security & Parser Middleware ---
