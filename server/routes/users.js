@@ -1,18 +1,10 @@
 // routes/users.js
 import express from "express";
-import bcrypt from "bcryptjs"; // consistent with schema
 import jwt from "jsonwebtoken";
 
 import User from "../models/User.js";
 
 const router = express.Router();
-
-// --- Placeholder auth middleware ---
-const auth = (req, res, next) => {
-  // In real app, verify JWT here
-  req.user = { id: "some-user-id" }; // Mock user
-  next();
-};
 
 // @route   POST /api/users/register
 // @desc    Register a new user
@@ -25,12 +17,15 @@ router.post("/register", async (req, res) => {
 
   try {
     const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: "Email already in use" });
+    if (existingUser)
+      return res.status(400).json({ message: "Email already in use" });
 
     // <-- Just pass password; schema will hash it
     const newUser = await User.create({ fullname, username, email, password });
 
-    const token = jwt.sign({ userid: newUser._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
     res.cookie("token", token, {
       maxAge: 3600000,
@@ -44,7 +39,6 @@ router.post("/register", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 // @route   POST /api/users/login
 // @desc    Authenticate user & get token
