@@ -15,8 +15,8 @@ import allRoutes from './routes/index.js';
 
 const app = express();
 
-const viteURI ='http://localhost:3000'
-const ngrokURI ='https://772518edf9e8.ngrok-free.app'
+const viteURI ='https://winklyy.netlify.app/'
+
 
 const corsOptions = {
   origin: viteURI, // Allow your Vite frontend
