@@ -9,7 +9,7 @@ function ButtonDefault({ targetLink, children }) {
   return (
     <button 
       onClick={handleClick}
-      className='min-w-30 h-10 px-4 bg-[#121212] text-white rounded-[50px]'
+      className='min-w-30 h-10 px-4 bg-[#121212] text-white rounded-[50px] cursor-pointer'
     >
       {children}
     </button>

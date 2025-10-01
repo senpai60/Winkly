@@ -35,7 +35,7 @@ function Navbar() {
             {/* <a className="text-sm h-10 min-w-10 px-4 rounded-[50px] flex items-center transition-colors duration-300 hover:bg-[#121212] hover:text-white" href="/">Home</a>
             <a className="text-sm h-10 min-w-10 px-4 rounded-[50px] flex items-center transition-colors duration-300 hover:bg-[#121212] hover:text-white" href="#about">About</a>
             <a className="text-sm h-10 min-w-10 px-4 rounded-[50px] flex items-center transition-colors duration-300 hover:bg-[#121212] hover:text-white" href="#how-it-works">How It Works</a> */}
-            <a className="text-sm h-10 min-w-10 px-4 rounded-[50px] flex items-center transition-colors duration-300 hover:bg-[#121212] hover:text-white" href="https://winkly-app.vercel.app/">OpenApp</a>
+            {/* <a className="text-sm h-10 min-w-10 px-4 rounded-[50px] flex items-center transition-colors duration-300 hover:bg-[#121212] hover:text-white" href="https://winkly-app.vercel.app/">OpenApp</a> */}
           </div>
           <ButtonDefault targetLink={"https://winkly-app.vercel.app/"}>OpenApp</ButtonDefault>
 
