@@ -56,38 +56,47 @@ router.get("/me", auth, async (req, res) => {
 // @route   POST api/profiles
 // @desc    Update a user profile
 // @access  Private
-router.post("/", auth, async (req, res) => {
-  upload.array('images', 5)(req, res, async (err) => {
-    if (err) {
-      console.error("Upload error:", err);
-      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ message: 'File too large! Max 2MB.' });
-      }
-      return res.status(500).json({ message: err.message });
+router.post("/", auth, upload.array("images", 5), async (req, res) => {
+  try {
+    const {
+      name,
+      dob,
+      gender,
+      interestedIn,
+      tagline,
+      about,
+      lookingFor,
+      interests,
+    } = req.body;
+    const profileFields = { name, dob, gender, tagline, about, lookingFor };
+
+    if (interests) {
+      // FIX: Check if 'interests' is already an array (which happens with multiple selections)
+      // If it's an array, use it directly. If it's a string, then split it.
+      profileFields.interests = Array.isArray(interests)
+        ? interests
+        : interests.split(",");
     }
 
-    try {
-      // Profile update logic here
-      const { name, dob, gender, interestedIn, tagline, about, lookingFor, interests } = req.body;
-      const profileFields = { name, dob, gender, tagline, about, lookingFor };
-      if (interests) profileFields.interests = interests.split(',');
-      if (req.files && req.files.length > 0) {
-        profileFields.images = req.files.map(file => file.path); // Cloudinary path
-      }
-
-      const updatedProfile = await Profile.findOneAndUpdate(
-        { user: req.user.id },
-        { $set: profileFields },
-        { new: true, upsert: true }
-      );
-
-      return res.status(200).json(updatedProfile);
-    } catch (err) {
-      console.error("Profile update error:", err);
-      return res.status(500).json({ message: 'Server error during profile update' });
+    if (req.files && req.files.length > 0) {
+      profileFields.images = req.files.map((file) => file.path); // Cloudinary URL
     }
-  });
+
+    if (interestedIn) profileFields.interestedIn = interestedIn.split(",");
+
+    const updatedProfile = await Profile.findOneAndUpdate(
+      { user: req.user.id },
+      { $set: profileFields },
+      { new: true, upsert: true }
+    );
+
+    return res.status(200).json(updatedProfile);
+  } catch (err) {
+    console.error("Profile update error:", err);
+    return res
+      .status(500)
+      .json({ message: "Server error during profile update" });
+  }
 });
-
 
 export default router;
