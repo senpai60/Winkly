@@ -6,7 +6,10 @@ import { Heart, Wallet } from 'lucide-react';
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-const API_URL = `${API_BASE_URL}/api/users`;
+// const API_URL = `${API_BASE_URL}/api/users`;
+
+// FIX: Ensure local fallback uses HTTP, or use the configured production URL.
+const API_URL = API_BASE_URL ? `${API_BASE_URL}/api/users` : `http://localhost:5000/api/users`;
 
 export function LoginSignup({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);

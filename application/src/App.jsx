@@ -11,10 +11,16 @@ import { SettingsScreen } from './components/SettingsScreen';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''; 
 
+// const api = axios.create({
+//   // FIX 2: If API_BASE_URL is '', the resulting base URL is just '/api'.
+//   // This relative path triggers the Netlify/Vite proxy.
+//   baseURL: `${API_BASE_URL}/api`, 
+// });
+
+
 const api = axios.create({
-  // FIX 2: If API_BASE_URL is '', the resulting base URL is just '/api'.
-  // This relative path triggers the Netlify/Vite proxy.
-  baseURL: `${API_BASE_URL}/api`, 
+  // FIX: If VITE_API_BASE_URL is empty (local dev), explicitly use http://localhost:5000/api
+  baseURL: API_BASE_URL ? `${API_BASE_URL}/api` : `http://localhost:5000/api`, 
 });
 
 api.interceptors.request.use((config) => {
