@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import ButtonDefault from "./ButtonDefault";
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,21 +25,22 @@ function Navbar() {
     <nav className="w-full py-4 fixed top-0 left-0 z-50 md:px-[60px]">
       <div className="w-full px-4 lg:px-20">
         {/* The ref is attached to the container to detect outside clicks */}
-        <div ref={navRef} className="nav-container relative w-full text-[#121212] bg-[#f6f6f6] rounded-[50px] flex justify-between items-center px-6 py-3 shadow-md">
+        <div ref={navRef} className="nav-container relative w-full text-[#121212] bg-[#d1d1d1] rounded-[50px] flex justify-between items-center px-6 py-3 shadow-md">
           
           {/* Brand Name */}
           <h1 className="font-bold text-lg cursor-pointer">WINKLY</h1>
 
           {/* Desktop Navigation Links */}
           <div className="navlinks hidden md:flex items-center justify-center gap-2">
-            <a className="text-sm h-10 min-w-10 px-4 rounded-[50px] flex items-center transition-colors duration-300 hover:bg-[#121212] hover:text-white" href="/">Home</a>
+            {/* <a className="text-sm h-10 min-w-10 px-4 rounded-[50px] flex items-center transition-colors duration-300 hover:bg-[#121212] hover:text-white" href="/">Home</a>
             <a className="text-sm h-10 min-w-10 px-4 rounded-[50px] flex items-center transition-colors duration-300 hover:bg-[#121212] hover:text-white" href="#about">About</a>
-            <a className="text-sm h-10 min-w-10 px-4 rounded-[50px] flex items-center transition-colors duration-300 hover:bg-[#121212] hover:text-white" href="#how-it-works">How It Works</a>
-            <a className="text-sm h-10 min-w-10 px-4 rounded-[50px] flex items-center transition-colors duration-300 hover:bg-[#121212] hover:text-white" href="#explore">Explore</a>
+            <a className="text-sm h-10 min-w-10 px-4 rounded-[50px] flex items-center transition-colors duration-300 hover:bg-[#121212] hover:text-white" href="#how-it-works">How It Works</a> */}
+            <a className="text-sm h-10 min-w-10 px-4 rounded-[50px] flex items-center transition-colors duration-300 hover:bg-[#121212] hover:text-white" href="https://winkly-app.vercel.app/">OpenApp</a>
           </div>
+          <ButtonDefault targetLink={"https://winkly-app.vercel.app/"}>OpenApp</ButtonDefault>
 
           {/* Hamburger Menu Icon - only visible on mobile/tablet */}
-          <div className="md:hidden">
+          <div className="hidden">
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="focus:outline-none p-2" aria-label="Toggle Menu">
               {/* Animated Hamburger/Close Icon */}
               <div className="space-y-1.5">
