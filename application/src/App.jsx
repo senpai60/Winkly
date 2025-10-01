@@ -9,9 +9,12 @@ import { DashboardScreen } from './components/DashboardScreen';
 import { MyProfileScreen } from './components/MyProfileScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 
-// Axios instance to automatically add the auth token
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''; 
+
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`, 
+  // FIX 2: If API_BASE_URL is '', the resulting base URL is just '/api'.
+  // This relative path triggers the Netlify/Vite proxy.
+  baseURL: `${API_BASE_URL}/api`, 
 });
 
 api.interceptors.request.use((config) => {
