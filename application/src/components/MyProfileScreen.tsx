@@ -113,9 +113,13 @@ export function MyProfileScreen({ profile, onBack, onSettings }: MyProfileScreen
   };
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const profileImages = selectedFiles.length > 0 
+ const profileImages = selectedFiles.length > 0 
     ? selectedFiles.map(file => URL.createObjectURL(file))
-    : (profile?.images?.length > 0 ? profile.images.map((p: string) => `http://localhost:5000/${p.replace(/\\/g, '/')}`) : [
+    : (profile?.images?.length > 0 ? profile.images.map((p: string) => 
+        p.startsWith('http') 
+          ? p // Use full URL directly for Cloudinary
+          : `http://localhost:5000/${p.replace(/\\/g, '/')}` // Prefix only for local paths
+      ) : [
     'https://via.placeholder.com/400x500.png?text=No+Image', // A neutral placeholder
   ]);
   
