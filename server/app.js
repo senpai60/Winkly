@@ -1,4 +1,5 @@
 // app.js
+
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -14,23 +15,29 @@ import allRoutes from './routes/index.js';
 const app = express();
 
 // --- CORS Configuration ---
+const vercelDomain = 'winkly-d0g143mky-vivek-satloniyas-projects.vercel.app';
 const allowedOrigins = [
-  'https://winklyy.netlify.app', // Netlify frontend
-  'http://localhost:3000'        // local dev
+  'https://winklyy.netlify.app', // Production Frontend
+  'http://localhost:3000',        // Local Dev
+  `https://${vercelDomain}`,       // Vercel API Domain itself
+  // If your Vercel deployment URL changes (e.g., after redeployment), 
+  // you may need to add the new URL here, or use a regex/wildcard if all subdomains are needed.
 ];
 
-const corsOptions = {
-  origin: function(origin, callback) {
-    console.log('Incoming request from origin:', origin); // debug
-    if (!origin) return callback(null, true); // allow Postman, curl, server-side
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error('CORS policy: This origin is not allowed.'), false);
-    }
-    return callback(null, true);
-  },
+// Standard CORS setup using the array of allowed origins
+app.use(cors({
+  origin: allowedOrigins,
   credentials: true,
   optionsSuccessStatus: 200
-};
+}));
+
+// ✅ FIX FOR VERCEl/SERVERLESS: Explicitly handle preflight OPTIONS requests for all routes.
+// This forces the server to respond with the correct headers for the preflight request.
+app.options('*', cors({
+  origin: allowedOrigins,
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
 
 
 // --- Core Security & Parser Middleware ---
@@ -48,10 +55,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // --- Database Connection ---
 const MONGO_URI = process.env.MONGO_URI;
 
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
+// Removed unnecessary useNewUrlParser and useUnifiedTopology options for modern Mongoose.
+mongoose.connect(MONGO_URI)
   .then(() => console.log('✅ Successfully connected to MongoDB.'))
   .catch(err => console.error('❌ Database connection failed:', err));
 
@@ -63,12 +68,14 @@ app.get('/', (req, res) => {
   res.status(200).json({ message: 'NFT Dating App API is running!' });
 });
 
-// --- Global Error Handler (optional but good for CORS and others) ---
+// --- Global Error Handler ---
 app.use((err, req, res, next) => {
   console.error('Global Error:', err.message);
-  res.status(500).json({ error: err.message });
+  // FIX: Removed the TypeScript type assertion '(err as any)' for plain JavaScript/Node.
+  res.status(err.status || 500).json({ error: err.message || 'An unknown error occurred' });
 });
+
 
 // --- Start Server ---
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server live on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server live on port ${PORT}`));
