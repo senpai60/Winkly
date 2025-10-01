@@ -3,16 +3,20 @@ import { motion } from "motion/react";
 import axios from "axios";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { X, Heart, Diamond, Zap, User, Wallet } from "lucide-react";
+import { X, Heart, Diamond, Zap, User, Wallet, History } from "lucide-react"; // Import History icon
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 // Axios instance to automatically add the auth token
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const api = axios.create({
-  // FIX: Explicitly setting local fallback to use HTTP protocol
-  // If VITE_API_BASE_URL is available (Vercel/Prod), use it. Otherwise, force HTTP://localhost:5000
-  baseURL: API_BASE_URL ? `${API_BASE_URL}/api` : `http://localhost:5000/api`, 
+  // Use platform-aware logic for the base URL to support local dev (http://localhost:5000/api) 
+  // and deployed environments which might use a relative path proxy (/api).
+  baseURL: API_BASE_URL 
+    ? `${API_BASE_URL}/api` 
+    : (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+        ? `http://localhost:5000/api`
+        : `/api`, 
 });
 
 api.interceptors.request.use((config) => {
@@ -21,30 +25,40 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+}, (error) => {
+  return Promise.reject(error);
 });
+
+// Update the Profile structure to match the backend model properties (like _id)
+// We'll use this temporary structure for the profile object passed in handlers.
+// The data fetched from the API (profiles) often uses different casing (snake_case/camelCase)
+// compared to the mock data, so using the actual fetched object is best.
+
 
 export function SwipeScreen({
   onProfileDetails,
   onNFTDate,
   onMyProfile,
   onDashboard,
+  onSwipeHistory, // NEW PROP
 }) {
   const [profiles, setProfiles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [nftBalance] = useState(12);
+  // Mock NFT balance for UI display
+  const [nftBalance] = useState(12); 
 
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
         setIsLoading(true);
         setError(null);
+        // Note: The /profiles endpoint should return potential matches based on preferences.
         const response = await api.get("/profiles");
         setProfiles(response.data);
       } catch (err) {
         console.error("Failed to fetch profiles:", err);
-        // Handle token expiration/invalid session if needed
         setError("Could not load profiles. Please try again later.");
       } finally {
         setIsLoading(false);
@@ -54,8 +68,22 @@ export function SwipeScreen({
     fetchProfiles();
   }, []);
 
-  const handleSwipe = (direction) => {
-    console.log(`Swiped ${direction} on ${profiles[currentIndex]?.name}`);
+  const handleSwipe = async (direction) => {
+    const currentProfile = profiles[currentIndex];
+    if (!currentProfile) return;
+
+    try {
+        // Send swipe data to the backend
+        await api.post("/swipes", {
+            swipedId: currentProfile.user, // Assuming swiped ID is in user field
+            action: direction === 'right' ? 'like' : 'dislike'
+        });
+    } catch (err) {
+        console.error(`Failed to record ${direction} swipe:`, err);
+        // Optionally show a toast error here
+    }
+
+    // Move to next profile
     if (currentIndex < profiles.length) {
       setCurrentIndex(currentIndex + 1);
     }
@@ -86,7 +114,6 @@ export function SwipeScreen({
     );
   }
 
-  // Determine if we are out of profiles
   const isOutOfProfiles = currentIndex >= profiles.length;
   const currentProfile = profiles[currentIndex];
 
@@ -99,15 +126,31 @@ export function SwipeScreen({
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <Button
-          onClick={onMyProfile}
-          variant="ghost"
-          size="sm"
-          className="hover:bg-white/10 p-2"
-        >
-          <User className="w-6 h-6" /> {/* User Profile Icon */}
-        </Button>
+        <div className="flex space-x-2">
+            {/* New History Button */}
+            <Button
+                onClick={onSwipeHistory}
+                variant="ghost"
+                size="sm"
+                className="hover:bg-white/10 p-2"
+                aria-label="Swipe History"
+            >
+                <History className="w-6 h-6" /> 
+            </Button>
+            {/* Existing User Profile Button */}
+            <Button
+                onClick={onMyProfile}
+                variant="ghost"
+                size="sm"
+                className="hover:bg-white/10 p-2"
+                aria-label="My Profile"
+            >
+                <User className="w-6 h-6" /> 
+            </Button>
+        </div>
+        
         <h1 className="gradient-text-pink-blue font-bold text-2xl">Discover</h1>
+        
         <Button
           onClick={onDashboard}
           variant="ghost"
@@ -171,7 +214,7 @@ export function SwipeScreen({
                     currentProfile.images && currentProfile.images.length > 0
                       ? currentProfile.images[0].startsWith("http") // Cloudinary URL check
                         ? currentProfile.images[0] 
-                        : `http://localhost:5000/${currentProfile.images[0].replace(
+                        : `${API_BASE_URL ? API_BASE_URL : 'http://localhost:5000'}/${currentProfile.images[0].replace(
                             /\\/g,
                             "/"
                           )}` // Local path fallback
@@ -243,4 +286,3 @@ export function SwipeScreen({
     </div>
   );
 }
-// UserIconUpdae

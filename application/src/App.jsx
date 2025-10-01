@@ -8,10 +8,11 @@ import { RatingScreen } from './components/RatingScreen';
 import { DashboardScreen } from './components/DashboardScreen';
 import { MyProfileScreen } from './components/MyProfileScreen';
 import { SettingsScreen } from './components/SettingsScreen';
+import { SwipeHistory } from './components/SwipeHistory'; // NEW IMPORT
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''; 
 
-// FIX: Use platform-aware logic for the base URL to support local dev (http://localhost:5000/api) 
+// Use platform-aware logic for the base URL to support local dev (http://localhost:5000/api) 
 // and deployed environments which might use a relative path proxy (/api).
 const api = axios.create({
   baseURL: API_BASE_URL 
@@ -82,6 +83,7 @@ export default function App() {
 
   // --- Navigation Handlers ---
   const handleProfileDetails = (profile) => {
+    // If navigating from SwipeHistory, we might get the Profile object directly.
     setSelectedProfile(profile);
     setCurrentScreen('profile');
   };
@@ -110,6 +112,11 @@ export default function App() {
     if (selectedProfile) {
       setCurrentScreen('profile');
     }
+  };
+  
+  // NEW: Navigate to Swipe History
+  const handleSwipeHistory = () => {
+    setCurrentScreen('swipeHistory');
   };
 
   const handleMyProfile = () => {
@@ -140,13 +147,26 @@ export default function App() {
             onNFTDate={handleBuyNFTDate}
             onMyProfile={handleMyProfile}
             onDashboard={handleDashboard}
+            onSwipeHistory={handleSwipeHistory} // NEW HANDLER
+          />
+        );
+      case 'swipeHistory': // NEW SCREEN
+        return (
+          <SwipeHistory
+            onBack={handleBackToSwipe}
+            onSelectProfile={handleProfileDetails}
           />
         );
       case 'profile':
+        // Ensure the ProfileDetailsScreen can handle the full profile object (which it already does)
         return selectedProfile ? (
           <ProfileDetailsScreen
             profile={selectedProfile}
-            onBack={handleBackToSwipe}
+            onBack={
+              currentScreen === 'swipeHistory' // If coming from history, go back to history
+                ? handleSwipeHistory 
+                : handleBackToSwipe // Otherwise, go back to the swipe screen
+            } 
             onBuyNFTDate={handleBuyNFTDate}
           />
         ) : null;
