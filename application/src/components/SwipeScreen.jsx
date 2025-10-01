@@ -1,246 +1,180 @@
-import { useState, useEffect } from "react";
-import { motion } from "motion/react";
-import axios from "axios";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { X, Heart, Diamond, Zap, User, Wallet } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { useState } from 'react';
+import { motion } from 'motion/react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Heart, Wallet } from 'lucide-react';
+import axios from 'axios';
 
-// Axios instance to automatically add the auth token
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+// Non-functional change for commit.
+// FIX: Ensure local fallback uses HTTP, or use the configured production URL.
+const API_URL = API_BASE_URL ? `${API_BASE_URL}/api/users` : `http://localhost:5000/api/users`;
 
-const api = axios.create({
-  // FIX: Explicitly setting local fallback to use HTTP protocol
-  // If VITE_API_BASE_URL is available (Vercel/Prod), use it. Otherwise, force HTTP://localhost:5000
-  baseURL: API_BASE_URL ? `${API_BASE_URL}/api` : `http://localhost:5000/api`, 
-});
+export function LoginSignup({ onLogin }) {
+  const [isLogin, setIsLogin] = useState(true);
+// ... (rest of the code is unchanged)
+  const [formData, setFormData] = useState({
+    fullname: '',
+    username: '',
+    email: '',
+    password: '',
+    dob: '', // Date of Birth state
+    gender: '', // Gender state
+    interestedIn: [], // Sexuality/Preference state
+  });
+  const [error, setError] = useState('');
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+  const toggleForm = () => {
+    setIsLogin(!isLogin);
+    setError('');
+    setFormData({
+      fullname: '',
+      username: '',
+      email: '',
+      password: '',
+      dob: '',
+      gender: '',
+      interestedIn: [],
+    })
+  };
 
-export function SwipeScreen({
-  onProfileDetails,
-  onNFTDate,
-  onMyProfile,
-  onDashboard,
-}) {
-  const [profiles, setProfiles] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [nftBalance] = useState(12);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-  useEffect(() => {
-    const fetchProfiles = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await api.get("/profiles");
-        setProfiles(response.data);
-      } catch (err) {
-        console.error("Failed to fetch profiles:", err);
-        // Handle token expiration/invalid session if needed
-        setError("Could not load profiles. Please try again later.");
-      } finally {
-        setIsLoading(false);
+  const handleInterestChange = (e) => {
+    const { value, checked } = e.target;
+    setFormData(prev => {
+        const interests = prev.interestedIn;
+        if (checked) {
+            return { ...prev, interestedIn: [...interests, value] };
+        } else {
+            return { ...prev, interestedIn: interests.filter(interest => interest !== value) };
+        }
+    });
+  };
+
+  const handleSubmit = async () => {
+    setError('');
+    const endpoint = isLogin ? '/login' : '/register';
+    try {
+      if (isLogin) {
+        // Login Logic
+        const { email, password } = formData;
+        if (!email || !password) return setError('Please fill in all fields.');
+        const response = await axios.post(`${API_URL}${endpoint}`, { email, password });
+        if (response.data.token) {
+          onLogin(response.data.token);
+        }
+      } else {
+        // Register Logic
+        if (!formData.fullname || !formData.username || !formData.email || !formData.password || !formData.dob || !formData.gender || formData.interestedIn.length === 0) {
+          return setError('Please fill in all fields.');
+        }
+        const response = await axios.post(`${API_URL}${endpoint}`, formData);
+        if (response.data.token) {
+          console.log('Registration successful:', response.data.message);
+          onLogin(response.data.token);
+        }
       }
-    };
-
-    fetchProfiles();
-  }, []);
-
-  const handleSwipe = (direction) => {
-    console.log(`Swiped ${direction} on ${profiles[currentIndex]?.name}`);
-    if (currentIndex < profiles.length) {
-      setCurrentIndex(currentIndex + 1);
+    } catch (err) {
+      setError(err.response?.data?.message || 'An error occurred. Please try again.');
     }
   };
 
-  const handleDragEnd = (event, info) => {
-    const threshold = 100;
-    if (info.offset.x > threshold) {
-      handleSwipe("right");
-    } else if (info.offset.x < -threshold) {
-      handleSwipe("left");
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-white">Finding people for you...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-red-500">{error}</p>
-      </div>
-    );
-  }
-
-  // Determine if we are out of profiles
-  const isOutOfProfiles = currentIndex >= profiles.length;
-  const currentProfile = profiles[currentIndex];
+  const genderOptions = ["Male", "Female", "Non-binary", "Transgender", "Other", "Prefer not to say"];
+  const interestOptions = ["Male", "Female", "Non-binary", "Transgender", "Other"];
 
   return (
-    <div className="min-h-screen bg-background p-4 flex flex-col">
-      
-      {/* 1. Header with navigation (ALWAYS RENDERED) */}
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-transparent to-pink-900/20 pointer-events-none" />
       <motion.div
-        className="flex justify-between items-center mb-6"
-        initial={{ opacity: 0, y: -20 }}
+        className="flex-1 flex flex-col items-center justify-center space-y-6 z-10 w-full max-w-sm"
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
       >
-        <Button
-          onClick={onMyProfile}
-          variant="ghost"
-          size="sm"
-          className="hover:bg-white/10 p-2"
-        >
-          <User className="w-6 h-6" /> {/* User Profile Icon */}
-        </Button>
-        <h1 className="gradient-text-pink-blue font-bold text-2xl">Discover</h1>
-        <Button
-          onClick={onDashboard}
-          variant="ghost"
-          size="sm"
-          className="hover:bg-white/10 p-1"
-        >
-          <div className="glass-card px-3 py-2 rounded-full glow-blue">
-            <div className="flex items-center space-x-2">
-              <Diamond className="w-4 h-4 text-accent" />
-              <span className="font-semibold">{nftBalance}</span>
-            </div>
-          </div>
-        </Button>
-      </motion.div>
-
-      {/* 2. Card stack / Fallback content (CONDITIONAL RENDERING) */}
-      <div className="flex-1 relative flex items-center justify-center">
-        {isOutOfProfiles ? (
-          // Fallback Screen Content (Header is preserved)
-          <div className="flex flex-col items-center justify-center text-center p-4">
-            <h2 className="text-2xl font-bold text-white mb-2">
-              That's everyone for now!
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              Check back later for new profiles.
-            </p>
-            <Button onClick={() => setCurrentIndex(0)}>Start Over</Button>
-          </div>
-        ) : (
-          <>
-            {/* Background cards */}
-            {profiles
-              .slice(currentIndex + 1, currentIndex + 3)
-              .map((profile, index) => (
-                <motion.div
-                  key={profile._id} 
-                  className="absolute w-full max-w-sm aspect-[3/4] glass-card rounded-3xl"
-                  style={{
-                    zIndex: -index,
-                    scale: 1 - (index + 1) * 0.05,
-                    y: (index + 1) * 10,
-                  }}
-                  initial={{ scale: 1 - (index + 1) * 0.05 }}
-                />
-              ))}
-
-            {/* Main swipe card */}
-            <motion.div
-              key={currentProfile._id} 
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              onDragEnd={handleDragEnd}
-              whileDrag={{ scale: 1.05, rotate: 5 }}
-              className="w-full max-w-sm aspect-[3/4] glass-card rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing"
-              style={{ zIndex: 10 }}
-              onClick={() => onProfileDetails(currentProfile)}
-            >
-              <div className="relative h-full">
-                <ImageWithFallback
-                  src={
-                    currentProfile.images && currentProfile.images.length > 0
-                      ? currentProfile.images[0].startsWith("http") // Cloudinary URL check
-                        ? currentProfile.images[0] 
-                        : `http://localhost:5000/${currentProfile.images[0].replace(
-                            /\\/g,
-                            "/"
-                          )}` // Local path fallback
-                      : `https://via.placeholder.com/400x500.png?text=${currentProfile.name}`
-                  }
-                  alt={currentProfile.name}
-                  className="w-full h-full object-cover"
-                />
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h2 className="text-2xl font-bold mb-1">
-                    {currentProfile.name}, {currentProfile.age}
-                  </h2>
-                  <p className="text-white/80 mb-4">{currentProfile.tagline}</p>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </div>
-
-      {/* 3. Action buttons (ONLY RENDERED IF PROFILES ARE AVAILABLE) */}
-      {!isOutOfProfiles && (
+        <div className="text-center space-y-4">
+          <motion.div
+            className="flex items-center justify-center space-x-2"
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
+            <Heart className="w-8 h-8 text-primary" />
+            <h1 className="gradient-text-pink-blue text-4xl font-bold">Winkly</h1>
+          </motion.div>
+          <motion.p
+            className="text-muted-foreground text-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+          >
+            {isLogin ? 'Welcome back!' : 'Join the community.'}
+          </motion.p>
+        </div>
         <motion.div
-          className="flex justify-center items-center space-x-6 mt-6"
+          className="w-full space-y-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.6, duration: 0.6 }}
         >
-          <Button
-            onClick={() => handleSwipe("left")}
-            size="lg"
-            variant="outline"
-            className="w-14 h-14 rounded-full border-red-500/30 hover:border-red-500 hover:bg-red-500/10 hover:glow-pink"
-          >
-            <X className="w-6 h-6 text-red-500" />
-          </Button>
-          <Button
-            onClick={() => handleSwipe("right")}
-            size="lg"
-            className="w-14 h-14 rounded-full bg-primary hover:bg-primary/80 glow-pink"
-          >
-            <Heart className="w-6 h-6" />
-          </Button>
-          <Button
-            onClick={() => onNFTDate(currentProfile)}
-            size="lg"
-            variant="outline"
-            className="w-14 h-14 rounded-full border-accent/30 hover:border-accent hover:bg-accent/10 hover:glow-blue"
-          >
-            <Diamond className="w-6 h-6 text-accent" />
+          {!isLogin && (
+            <>
+              <Input name='fullname' type="text" placeholder="Full Name" value={formData.fullname} onChange={handleChange} className="w-full glass-card border-white/10 focus:border-accent" />
+              <Input name='username' type="text" placeholder="Username" value={formData.username} onChange={handleChange} className="w-full glass-card border-white/10 focus:border-accent" />
+            </>
+          )}
+          <Input name='email' type="email" placeholder="Email" value={formData.email} onChange={handleChange} className="w-full glass-card border-white/10 focus:border-accent" />
+          <Input name='password' type="password" placeholder="Password" value={formData.password} onChange={handleChange} className="w-full glass-card border-white/10 focus:border-accent" />
+          
+          {!isLogin && (
+            <>
+              {/* --- Date of Birth Input --- */}
+              <div className='text-left'>
+                <label className="text-sm text-muted-foreground ml-1">Date of Birth</label>
+                <Input name='dob' type="date" value={formData.dob} onChange={handleChange} className="w-full glass-card border-white/10 focus:border-accent" />
+              </div>
+              
+              {/* --- Gender Selection --- */}
+              <select name="gender" value={formData.gender} onChange={handleChange} className="w-full h-11 px-3 py-1 text-sm bg-transparent glass-card border border-white/10 rounded-md focus:border-accent outline-none">
+                <option value="" disabled>Select your gender</option>
+                {genderOptions.map(option => <option key={option} value={option} className="bg-gray-800 text-white">{option}</option>)}
+              </select>
+
+              {/* --- Interested In --- */}
+              <div className='text-left text-muted-foreground'>
+                <label className="text-sm ml-1">Interested In</label>
+                <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                    {interestOptions.map(option => (
+                        <label key={option} className="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" value={option} onChange={handleInterestChange} className="form-checkbox h-4 w-4 text-primary bg-gray-700 border-gray-600 rounded focus:ring-primary"/>
+                            <span>{option}</span>
+                        </label>
+                    ))}
+                </div>
+              </div>
+            </>
+          )}
+          
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          <Button onClick={handleSubmit} className="w-full glass-card glow-pink hover:glow-pink/80 transition-all duration-300 py-6" size="lg">
+            <Heart className="w-5 h-5 mr-2" />
+            {isLogin ? 'Login with Email' : 'Sign Up with Email'}
           </Button>
         </motion.div>
-      )}
-
-      {/* 4. Swipe hint (ONLY RENDERED IF PROFILES ARE AVAILABLE) */}
-      {!isOutOfProfiles && (
-        <motion.p 
-          className="text-center text-muted-foreground text-sm mt-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-        >
-          Swipe or tap card for details • 💎 Buy NFT Date
-        </motion.p>
-      )}
+        
+        <p className="text-sm text-muted-foreground">
+          {isLogin ? "Don't have an account? " : 'Already have an account? '}
+          <button onClick={toggleForm} className="text-primary hover:underline">
+            {isLogin ? 'Sign Up' : 'Login'}
+          </button>
+        </p>
+      </motion.div>
     </div>
   );
 }
-// UserIconUpdae
