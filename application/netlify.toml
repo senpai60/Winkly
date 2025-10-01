@@ -1,0 +1,10 @@
+# Netlify Redirects Configuration
+
+# This rule proxies all requests starting with /api/ to your Vercel backend.
+# Netlify hides the real Vercel URL from the browser, solving the CORS problem.
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://winkly-d0g143mky-vivek-satloniyas-projects.vercel.app/api/:splat"
+  status = 200
+  force = true
