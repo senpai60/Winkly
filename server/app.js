@@ -16,22 +16,36 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000',           // Local Dev
   'https://winklyy.netlify.app',    // Production Frontend (Netlify)
-  'https://winkly-app.vercel.app'   // Vercel Frontend
+  'https://winkly-app.vercel.app'   // Production Frontend (Vercel)
 ];
 
-app.use(cors({
-  origin: allowedOrigins,
+
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow if no origin (e.g., non-browser requests like Postman or same-origin requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // Allow explicitly whitelisted origins
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow Vercel and Netlify preview domains dynamically
+    if (origin.endsWith('.vercel.app') || origin.endsWith('.netlify.app')) {
+      return callback(null, true);
+    }
+
+    // Reject all other origins
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   optionsSuccessStatus: 200
-}));
-
-// Handle preflight requests
-app.options('*', cors({
-  origin: allowedOrigins,
-  credentials: true,
-  optionsSuccessStatus: 200
-}));
-
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 // --- Security & Parsers ---
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(express.json());

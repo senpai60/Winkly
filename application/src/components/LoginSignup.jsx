@@ -8,8 +8,13 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 // const API_URL = `${API_BASE_URL}/api/users`;
 
-// FIX: Ensure local fallback uses HTTP, or use the configured production URL.
-const API_URL = API_BASE_URL ? `${API_BASE_URL}/api/users` : `http://localhost:5000/api/users`;
+// FIX: Ensure the API_URL correctly handles production/proxy environments where
+// VITE_API_BASE_URL is not set, preventing cross-origin errors to localhost.
+const API_URL = API_BASE_URL 
+  ? `${API_BASE_URL}/api/users` 
+  : (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+      ? `http://localhost:5000/api/users` 
+      : `/api/users`; // Use relative path for deployed environment with proxy
 
 export function LoginSignup({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
