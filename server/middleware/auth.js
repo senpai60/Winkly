@@ -2,19 +2,20 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-
 const auth = async (req, res, next) => {
   try {
     // Authorization header check
     const authHeader = req.header("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "No token, authorization denied" });
+      return res
+        .status(401)
+        .json({ message: "No token, authorization denied" });
     }
-    console.log("🔍 Auth Header Received:", authHeader); 
+    // console.log("🔍 Auth Header Received:", authHeader);
 
     // Extract token
     const token = authHeader ? authHeader.replace("Bearer ", "") : null;
-    console.log("🔍 Token Extracted:", token);
+    // console.log("🔍 Token Extracted:", token);
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -27,7 +28,7 @@ const auth = async (req, res, next) => {
     // Attach user to request
     req.user = user;
 
-    console.log("✅ Authentication successful for user:", user.email);
+    // console.log("✅ Authentication successful for user:", user.email);
     next();
   } catch (error) {
     console.error("❌ Auth middleware error:", error.message);

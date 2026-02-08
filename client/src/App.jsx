@@ -9,22 +9,19 @@ import { ScrollSmoother } from "gsap/ScrollSmoother";
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
-
-
 function App() {
-
-  const main = useRef()
-  useLayoutEffect(()=>{
-    const ctx = gsap.context(()=>{
+  const main = useRef();
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
       ScrollSmoother.create({
         wrapper: "#smooth-wrapper",
         content: "#smooth-content",
         smooth: 1.2, // How much to smooth the scroll (1 is default)
         effects: true, // Look for data-speed and data-lag attributes
-      })
-    },main)
+      });
+    }, main);
     return () => ctx.revert();
-  },[])
+  }, []);
 
   return (
     <div ref={main}>

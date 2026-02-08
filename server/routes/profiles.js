@@ -24,6 +24,7 @@ router.get("/", auth, async (req, res) => {
       user: { $ne: req.user.id },
       gender: { $in: currentUserProfile.interestedIn },
     }).populate("user", "username email");
+    console.log(profiles);
 
     res.status(200).json(profiles);
   } catch (err) {
@@ -39,7 +40,7 @@ router.get("/me", auth, async (req, res) => {
   try {
     const profile = await Profile.findOne({ user: req.user.id }).populate(
       "user",
-      "username email"
+      "username email",
     );
 
     if (!profile) {
@@ -87,7 +88,7 @@ router.post("/", auth, upload.array("images", 5), async (req, res) => {
     const updatedProfile = await Profile.findOneAndUpdate(
       { user: req.user.id },
       { $set: profileFields },
-      { new: true, upsert: true }
+      { new: true, upsert: true },
     );
 
     return res.status(200).json(updatedProfile);
